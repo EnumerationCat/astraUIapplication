@@ -21,6 +21,7 @@ extern "C" {
 #include "usart.h"
 #include "OLED.h"
 #include "esp8266.h"
+
 #include <string.h>
 
     extern uint8_t receiveData[];
@@ -52,6 +53,9 @@ private:
     void _timer_init();
     void _usart3_init();
 
+    void _mpu6050_init();
+
+
 public:
     Myhal() = default;
 
@@ -75,6 +79,9 @@ public:
         _key_init();
         _usart1_init();
         _usart3_init();
+
+        _mpu6050_init();
+
 
 
     }

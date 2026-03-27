@@ -3,6 +3,7 @@
 //
 
 #include <cstring>
+#include <cmath>
 #include "hal.h"
 
 HAL *HAL::hal = nullptr;
@@ -214,3 +215,126 @@ void HAL::_keyTest() {
 }
 
 
+void HAL::_drawLine(float _x1, float _y1, float _x2, float _y2) {
+  // 先判断是否是水平/垂直线，复用已有优化实现
+  if (_y1 == _y2) {
+    // 水平线
+    float l = (_x2 > _x1) ? (_x2 - _x1) : (_x1 - _x2);
+    drawHLine((_x1 < _x2) ? _x1 : _x2, _y1, l);
+    return;
+  }
+  if (_x1 == _x2) {
+    // 垂直线
+    float h = (_y2 > _y1) ? (_y2 - _y1) : (_y1 - _y2);
+    drawVLine(_x1, (_y1 < _y2) ? _y1 : _y2, h);
+    return;
+  }
+
+  // 通用斜线（Bresenham算法）
+  int16_t x0 = static_cast<int16_t>(round(_x1));
+  int16_t y0 = static_cast<int16_t>(round(_y1));
+  int16_t x1 = static_cast<int16_t>(round(_x2));
+  int16_t y1 = static_cast<int16_t>(round(_y2));
+
+  int16_t dx = abs(x1 - x0);
+  int16_t dy = abs(y1 - y0);
+  int16_t sx = (x0 < x1) ? 1 : -1;
+  int16_t sy = (y0 < y1) ? 1 : -1;
+  int16_t err = dx - dy;
+
+  while (true) {
+    drawPixel(x0, y0); // 绘制单个像素
+    if (x0 == x1 && y0 == y1) break;
+    int16_t e2 = 2 * err;
+    if (e2 > -dy) {
+      err -= dy;
+      x0 += sx;
+    }
+    if (e2 < dx) {
+      err += dx;
+      y0 += sy;
+    }
+  }
+}
+
+
+
+void HAL::_drawDottedLine(float _x1, float _y1, float _x2, float _y2) {
+  // 先判断是否是水平/垂直虚线，复用已有实现
+  if (_y1 == _y2) {
+    float l = (_x2 > _x1) ? (_x2 - _x1) : (_x1 - _x2);
+    drawHDottedLine((_x1 < _x2) ? _x1 : _x2, _y1, l);
+    return;
+  }
+  if (_x1 == _x2) {
+    float h = (_y2 > _y1) ? (_y2 - _y1) : (_y1 - _y2);
+    drawVDottedLine(_x1, (_y1 < _y2) ? _y1 : _y2, h);
+    return;
+  }
+
+  // 通用斜线虚线（隔3个像素绘制1个）
+  int16_t x0 = static_cast<int16_t>(round(_x1));
+  int16_t y0 = static_cast<int16_t>(round(_y1));
+  int16_t x1 = static_cast<int16_t>(round(_x2));
+  int16_t y1 = static_cast<int16_t>(round(_y2));
+
+  int16_t dx = abs(x1 - x0);
+  int16_t dy = abs(y1 - y0);
+  int16_t sx = (x0 < x1) ? 1 : -1;
+  int16_t sy = (y0 < y1) ? 1 : -1;
+  int16_t err = dx - dy;
+  uint8_t dotCnt = 0; // 虚线计数
+
+  while (true) {
+    // 每4个像素绘制1个（可调整比例）
+    if (dotCnt % 4 == 0) {
+      drawPixel(x0, y0);
+    }
+    dotCnt++;
+
+    if (x0 == x1 && y0 == y1) break;
+    int16_t e2 = 2 * err;
+    if (e2 > -dy) {
+      err -= dy;
+      x0 += sx;
+    }
+    if (e2 < dx) {
+      err += dx;
+      y0 += sy;
+    }
+  }
+}
+void HAL::_drawDashLine(float _x1, float _y1, float _x2, float _y2) {
+  // 破折线：8个像素实线 + 4个像素空白 交替
+  int16_t x0 = static_cast<int16_t>(round(_x1));
+  int16_t y0 = static_cast<int16_t>(round(_y1));
+  int16_t x1 = static_cast<int16_t>(round(_x2));
+  int16_t y1 = static_cast<int16_t>(round(_y2));
+
+  int16_t dx = abs(x1 - x0);
+  int16_t dy = abs(y1 - y0);
+  int16_t sx = (x0 < x1) ? 1 : -1;
+  int16_t sy = (y0 < y1) ? 1 : -1;
+  int16_t err = dx - dy;
+  uint8_t dashCnt = 0; // 破折线计数
+
+  while (true) {
+    // 8个像素绘制，4个像素跳过
+    if (dashCnt < 8) {
+      drawPixel(x0, y0);
+    }
+    dashCnt++;
+    if (dashCnt >= 12) dashCnt = 0; // 重置计数
+
+    if (x0 == x1 && y0 == y1) break;
+    int16_t e2 = 2 * err;
+    if (e2 > -dy) {
+      err -= dy;
+      x0 += sx;
+    }
+    if (e2 < dx) {
+      err += dx;
+      y0 += sy;
+    }
+  }
+}

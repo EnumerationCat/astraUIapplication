@@ -106,9 +106,10 @@ bool Launcher::open() {
       currentMenu->getNextMenu()->getType() != "HardwareInfo"&&
       currentMenu->getNextMenu()->getType() != "Weather"&&
       currentMenu->getNextMenu()->getType() != "Clock"&&
-      currentMenu->getNextMenu()->getType() != "WiFi") {
-    popInfo("empty page!", 500);
-    return false;
+      currentMenu->getNextMenu()->getType() != "WiFi"&&
+      currentMenu->getNextMenu()->getType() != "GYRO") {
+      popInfo("empty page!", 500);
+      return false;
       }
 
 
@@ -140,6 +141,10 @@ bool Launcher::open() {
   if (currentMenu->getType() == "WiFi") {
     auto* wifi = dynamic_cast<WiFi*>(currentMenu);
     wifi->resetEnterAnimation();
+  }
+  if (currentMenu->getType() == "GYRO") {
+    auto* gyro = dynamic_cast<GYRO*>(currentMenu);
+    gyro->resetEnterAnimation();
   }
 
   selector->inject(currentMenu);
@@ -181,11 +186,16 @@ bool Launcher::close() {
 }
 
 void Launcher::update() {
-  if (time10minflage) {
+  if (time10minflage&&WiFi_Connect_Flag==1) {
     time10minflage=0;
     get_current_weather();
   }
+  // if (MPU6050_flag) {
+  //   printf("MPU6050:roll[%.2f],pitch[%.2f],yaw[%.2f]\r\n",MM.roll,MM.pitch,MM.yaw);
+  //   MPU6050_flag = 0;
+  // }
   if (Alarm_Flag) {
+    Alarm_Flag = 0;
     popInfo("Alarm!!!",10000);
   }
   HAL::canvasClear();
@@ -236,7 +246,8 @@ void Launcher::update() {
 
           if (currentMenu->getType() == "SerialMonitor"||
             currentMenu->getType() == "HardwareInfo"||
-            currentMenu->getType() == "Weather") {
+            currentMenu->getType() == "Weather"||
+            currentMenu->getType() == "GYRO") {
             popInfo("Error!",500);
             return;
           }

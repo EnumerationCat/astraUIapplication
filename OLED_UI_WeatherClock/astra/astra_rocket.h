@@ -46,7 +46,7 @@ void astraCoreDestroy(void);
 #include "astra_logo.h"
 #include "Clock_app.h"
 #include "WiFi_app.h"
-
+#include "GYRO_app.h"
 
 extern bool checkBox_Value;
 extern astra::CheckBox* checkBox;

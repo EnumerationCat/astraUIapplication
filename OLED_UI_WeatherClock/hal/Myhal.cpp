@@ -18,11 +18,13 @@ void Myhal::_dma_init() {
     MX_DMA_Init();
 }
 void Myhal::_timer_init() {
+    MX_TIM1_Init();
     MX_TIM2_Init();
-    HAL_TIM_Base_Start_IT(&htim2);
     MX_TIM3_Init();
     MX_TIM6_Init();
     MX_TIM7_Init();
+    HAL_TIM_Base_Start_IT(&htim1);
+    HAL_TIM_Base_Start_IT(&htim2);
     HAL_TIM_Base_Start_IT(&htim7);
 
 }
@@ -67,6 +69,12 @@ void Myhal::_usart1_init() {
 
 void Myhal::_usart3_init() {
     USART3_Receive_Init();
+}
+
+void Myhal::_mpu6050_init() {
+
+    MPU6050_Init();
+
 }
 
 
@@ -250,6 +258,10 @@ void Myhal::_screenOff() {
 
 void Myhal::_wifiConnect(const char* _wifista_ssid,const char* _wifista_password) {
 
+    HAL_GPIO_WritePin(GPIOC,GPIO_PIN_5,GPIO_PIN_RESET);
+    HAL_Delay(100);
+    HAL_GPIO_WritePin(GPIOC,GPIO_PIN_5,GPIO_PIN_SET);
+    HAL_Delay(500);
     esp8266_start_trans(_wifista_ssid,_wifista_password);
     get_current_weather(); 								//获取天气
     get_current_Time();

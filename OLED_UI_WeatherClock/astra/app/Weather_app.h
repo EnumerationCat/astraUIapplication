@@ -119,5 +119,5 @@ public:
 
 };
 }  // namespace astra
-
+extern astra::Weather* Myweather;
 #endif

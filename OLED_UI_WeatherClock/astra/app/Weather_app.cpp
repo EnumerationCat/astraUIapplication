@@ -91,6 +91,20 @@ void Weather::render(const std::vector<float>& _camera) {
 
     HAL::setDrawType(1);
 
+    // 检查天气数据是否有效，如果无效则使用默认值
+    static bool dataInitialized = false;
+    if (!dataInitialized) {
+        // 检查是否有有效的天气数据
+        if (strlen(results[0].now.code) == 0 || strlen(results[0].location.name) == 0) {
+            // 使用默认数据
+            strcpy(results[0].now.code, "99"); // UNKNOWN weather code
+            strcpy(results[0].location.name, "No Data");
+            strcpy(results[0].now.text, "404Error");
+            strcpy(results[0].now.temperature, "--");
+        }
+        dataInitialized = true;
+    }
+
     // 处理进入动画
     if (isEntering) {
         Animation::move(&posY, posYTrg, astraConfig.tileAnimationSpeed);

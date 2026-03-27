@@ -238,10 +238,11 @@ void WiFi::popInfoConnect(std::string _info) {
         if (yPop==yPopTrg&&WiFi_Connect_Flag==0) {
             HAL::wifiConnect("Wi-Fi","chuang123.");
             MyClock->setTime();
+            if (WiFi_Connect_Flag) yPopTrg = 0 - hPop - 8;  //滑出
         }
 
-        //这里条件可以加上一个如果按键按下 就滑出
-        if (WiFi_Connect_Flag) yPopTrg = 0 - hPop - 8;  //滑出
+
+
 
         if (yPop == 0 - hPop - 8) {
             onRender = false;  //退出条件
@@ -288,9 +289,11 @@ void WiFi::popInfoConnect(std::string _info) {
         Animation::move(&yPop, yPopTrg, getUIConfig().popSpeed);  //动画
         if (yPop==yPopTrg&&WiFi_Connect_Flag==1) {
             HAL::wifiDisConnect();
-        }
 
+
+        }
         if (!WiFi_Connect_Flag) yPopTrg = 0 - hPop - 8;  //滑出
+
 
         if (yPop == 0 - hPop - 8) {
             onRender = false;  //退出条件

@@ -1,5 +1,6 @@
 #include "esp8266.h"
 
+
 uint8_t WiFi_Connect_Flag = 0;
  uint8_t USART3_RX_BUF[USART3_MAX_RECV_LEN];  // 接收缓冲区
  uint8_t USART3_TX_BUF[USART3_MAX_SEND_LEN];  // 发送缓冲区
@@ -40,6 +41,7 @@ int _read(int file, char *ptr, int len)
  * @retval None
  */
 int time10min=0;
+int time1s = 0;
 uint8_t time10minflage=0;
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
@@ -63,7 +65,29 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 		if (time10min>=600) {
 			time10min=0;
 			time10minflage=1;
+			__HAL_TIM_CLEAR_IT(&htim7,TIM_IT_UPDATE);
 		}
+	}
+	//定时10ms，用于陀螺仪积分MM.pitch MM.roll MM.yaw
+	if (htim->Instance == TIM1) {
+		__HAL_TIM_CLEAR_IT(&htim1,TIM_IT_UPDATE);
+		MPU6050_Get_Angle(&MM);
+		time1s++;
+		if (time1s>=10) {
+
+			time1s = 0;
+			MPU6050_flag = 1;
+
+			//如果你想将此设备的陀螺仪数据用于其他设备，请打开这个，并按下面的格式解析串口数据
+			// static char buf[64];
+			// sprintf(buf, "MPU6050:roll[%.2f],pitch[%.2f],yaw[%.2f]\r\n",MM.roll,MM.pitch,MM.yaw);
+			// HAL_UART_Transmit(&huart4, (uint8_t *)buf, strlen(buf), 100);
+		}
+
+
+
+
+
 	}
 
 }
@@ -109,6 +133,10 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
         // 重新启动接收中断，等待下一个字节
         HAL_UART_Receive_IT(&huart3, &RxByte, 1);
     }
+
+
+
+
 }
 
 
@@ -124,7 +152,7 @@ NetWorkTime_t nwt = {0};
 void esp8266_start_trans(const char* wifista_ssid, const char* wifista_password)
 {
 	//USART3_Receive_Init();
-	char Ussercode[50];
+	char Ussercode[64];
     						//申请32字节内存，用于存wifista_ssid，wifista_password
     printf("send:AT\r\n");
     while(esp8266_send_cmd("AT","OK",20))//检查WIFI模块是否在线
@@ -145,7 +173,7 @@ void esp8266_start_trans(const char* wifista_ssid, const char* wifista_password)
 
     //设置连接到的WIFI网络名称/加密方式/密码,这几个参数需要根据您自己的路由器设置进行修改!!
     printf("send:AT+CIPMUX=0\r\n");
-    esp8266_send_cmd("AT+CIPMUX=0","OK",50);   //0：单连接，1：多连接
+    esp8266_send_cmd("AT+CIPMUX=0","OK",100);   //0：单连接，1：多连接
 
     sprintf(Ussercode,"AT+CWJAP=\"%s\",\"%s\"",wifista_ssid,wifista_password);//设置无线参数:ssid,密码
     printf("send:AT+CWJAP=\"%s\",\"%s\"\r\n",wifista_ssid,wifista_password);
@@ -174,6 +202,7 @@ uint8_t esp8266_scan_wifi(void) {
     // 发送扫描命令
     printf("send:AT+CWLAP\r\n");
     esp8266_send_cmd((uint8_t*)"AT+CWLAP", (uint8_t*)"OK", 5000);
+	HAL_Delay(500);
 
     if(USART3_RX_STA & 0X8000) {
         USART3_RX_BUF[USART3_RX_STA & 0X7FFF] = '\0';
@@ -314,7 +343,9 @@ void esp8266_getWiFi_Information(void) {
 	USART3_RX_STA = 0;
 
 
-    esp8266_send_cmd((uint8_t*)"AT+CIPSTA?", (uint8_t*)"OK", 50);
+    esp8266_send_cmd((uint8_t*)"AT+CIPSTA?", (uint8_t*)"OK", 100);
+	HAL_Delay(500);
+
 
     if(USART3_RX_STA & 0X8000) {
         USART3_RX_BUF[USART3_RX_STA & 0X7FFF] = '\0';
@@ -367,9 +398,11 @@ void esp8266_getWiFi_Information(void) {
         }
 
 
+
         printf("IP: %s\r\n", wifiInfo.ip);
         printf("Gateway: %s\r\n", wifiInfo.gateway);
         printf("Netmask: %s\r\n", wifiInfo.netmask);
+
 
         USART3_RX_STA = 0;
     }
@@ -462,6 +495,8 @@ uint8_t get_current_weather(void)
 
 
 	cJSON_WeatherParse(USART3_RX_BUF, results);		//解析天气数据
+
+
 	//打印结构体内内容
 	printf("获取内容如下： \r\n");
 
@@ -579,6 +614,8 @@ uint8_t get_current_Time(void)
                     else if(strstr((char*)USART3_RX_BUF, "Nov")) nwt.month = 11;
                     else if(strstr((char*)USART3_RX_BUF, "Dec")) nwt.month = 12;
 
+
+
                 	printf("nwt.year = %d\r\n",nwt.year);
                 	printf("nwt.month = %d\r\n",nwt.month);
                 	printf("nwt.date = %d\r\n",nwt.date);
@@ -587,11 +624,14 @@ uint8_t get_current_Time(void)
                 	printf("nwt.min = %d\r\n",nwt.min);
                 	printf("nwt.sec = %d\r\n",nwt.sec);
 
+                	HAL_Delay(1000);
+
                 }
 
             }
 
         }
+
 
         USART3_RX_STA = 0; // 清零接收状态
     }
@@ -711,9 +751,11 @@ int cJSON_WeatherParse(char *JSON, Results_t *results)
 					printf("cJSON_GetObjectItem: type=%d, string is %s,valuestring=%s \r\n",subobject->type,subobject->string,subobject->valuestring);
 					memcpy(results[0].last_update, subobject->valuestring,strlen(subobject->valuestring));
 				}
+
 			}
 		}
 	}
+
 
 	cJSON_Delete(json); //释放cJSON_Parse()分配出来的内存空间
 

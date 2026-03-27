@@ -157,6 +157,16 @@ public:
 
   virtual void _drawHLine(float _x, float _y, float _l) {}
 
+  // 新增通用画线函数声明
+  static void drawLine(float _x1, float _y1, float _x2, float _y2){ get()->_drawLine(_x1, _y1, _x2, _y2);}
+  virtual void _drawLine(float _x1, float _y1, float _x2, float _y2);
+
+  static void drawDottedLine(float _x1, float _y1, float _x2, float _y2){get()->_drawDottedLine(_x1, _y1, _x2, _y2);}
+  virtual void _drawDottedLine(float _x1, float _y1, float _x2, float _y2);
+
+  static void drawDashLine(float _x1, float _y1, float _x2, float _y2){get()->_drawDashLine(_x1, _y1, _x2, _y2);}
+  virtual void _drawDashLine(float _x1, float _y1, float _x2, float _y2);
+
   static void drawBMP(float _x, float _y, float _w, float _h, const unsigned char *_bitMap) {
     get()->_drawBMP(_x,
                     _y,

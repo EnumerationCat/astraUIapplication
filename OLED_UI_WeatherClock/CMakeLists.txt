@@ -1,5 +1,8 @@
 cmake_minimum_required(VERSION 3.22)
 
+# Set toolchain file for cross-compilation
+set(CMAKE_TOOLCHAIN_FILE "${CMAKE_SOURCE_DIR}/cmake/gcc-arm-none-eabi.cmake" CACHE STRING "Toolchain file" FORCE)
+
 #
 # This file is generated only once,
 # and is not re-generated if converter is called multiple times.
@@ -21,8 +24,6 @@ endif()
 # Set the project name
 set(CMAKE_PROJECT_NAME OLED_UITESTPRO)
 
-# Include toolchain file
-include("cmake/gcc-arm-none-eabi.cmake")
 
 # Enable compile command to ease indexing with e.g. clangd
 set(CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
@@ -54,6 +55,10 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
         Hardware/ws2812/ws2812.c
         Hardware/rtctimer/RTCtimer.c
         Hardware/esp8266/esp8266.c
+        Hardware/mpu6050/i2c_hal.c
+        Hardware/mpu6050/MPU6050.c
+
+
         System/Cjson/cJSON.c
 
 
@@ -65,6 +70,8 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
         astra/app/Clock_app.cpp
         astra/app/Weather_app.cpp
         astra/app/WiFi_app.cpp
+        astra/app/GYRO_app.cpp
+
 
         astra/ui/element/menu.cpp
         astra/ui/element/widget.cpp
@@ -88,6 +95,8 @@ target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
         Hardware/ws2812
         Hardware/rtctimer
         Hardware/esp8266
+        Hardware/mpu6050
+
         System/Cjson
 
 
@@ -115,6 +124,17 @@ target_link_libraries(${CMAKE_PROJECT_NAME}
 
     # Add user defined libraries
 )
+
+
+# Enable printf floating point support
+target_compile_options(${CMAKE_PROJECT_NAME} PRIVATE
+        -u _printf_float
+)
+
+target_link_options(${CMAKE_PROJECT_NAME} PRIVATE
+        -u _printf_float
+)
+
 add_custom_command(TARGET OLED_UITESTPRO POST_BUILD
         COMMAND ${CMAKE_OBJCOPY} -O ihex $<TARGET_FILE:OLED_UITESTPRO> ${CMAKE_BINARY_DIR}/OLED_UITESTPRO.hex
         COMMENT "生成HEX文件: ${CMAKE_BINARY_DIR}/OLED_UITESTPRO.hex"

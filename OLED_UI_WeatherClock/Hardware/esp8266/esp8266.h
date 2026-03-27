@@ -17,11 +17,11 @@ extern "C" {
 #include <sys/stat.h>
 #include <sys/unistd.h>
 #include "cJSON.h"
-
+#include "MPU6050.h"
 
 /* 串口缓冲区配置 */
-#define USART3_MAX_RECV_LEN    1024    // 最大接收长度
-#define USART3_MAX_SEND_LEN    512     // 最大发送长度
+#define USART3_MAX_RECV_LEN    4096    // 最大接收长度
+#define USART3_MAX_SEND_LEN    1024     // 最大发送长度
 
 /* WiFi配置参数 */
 #define WIFI_SSID             "Wi-Fi"            // 路由器SSID
