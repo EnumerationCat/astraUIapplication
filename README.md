@@ -22,3 +22,4 @@ Password modification with power-off persistence
 This is also a really fun and interesting project.All the required driver modules are located in the hardware directory.Get hands-on and explore — I’m sure you can do it too!
 Oh right! I almost forgot — both projects are developed with CLion + STM32CubeMX.
 If you want to open this project and compile it successfully, please make sure to configure the CMake toolchain properly, clear the CMake cache, and then restart.
+Wiki documentation under construction…
